@@ -7,7 +7,8 @@ enum ShapeType {
 
 struct Shape {
     ShapeType type;
-    // where the shapes is in circles/polylines arrays
+    // Index the shape into the type-specific arrays
+    // (circles, polylines, or quadratic_beziers)
     int index;
 
     bool use_fill;
@@ -15,6 +16,7 @@ struct Shape {
     bool use_stroke;
     float4 stroke_rgba;
     float stroke_width;
+    // Maps screen/world-space positions to the shape's object space.
     float3x3 world_to_obj;
 };
 

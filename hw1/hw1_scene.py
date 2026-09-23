@@ -85,6 +85,8 @@ class Scene:
 # helper function
 def add_curves(obj, new_points, closed,
                points, shape_type, curves, shapes):
+    # sometimes new_points might be [[1.0, 2.0], [3.0, 4.0], ...]
+    # below we normalize the new_points into a flat array
     new_points = np.asarray(new_points, dtype=np.float32).reshape(-1).tolist()
 
     pts_begin = len(points) // 2
@@ -200,6 +202,11 @@ def interpolate_transformation(transform_keyframes, t):
     assert False
 
 def upload_scene(scene, module, slang_device, t=0.0):
+    # Keyframe parameters are interpolated on the CPU;
+    # For simplicity, we re-upload the scene buffers every frame,
+    # even though most scene data does not change.
+    # This can be slow in practice.
+
     shapes = []
     for shape in scene.shapes:
         new_shape = shape.copy()
@@ -207,6 +214,8 @@ def upload_scene(scene, module, slang_device, t=0.0):
         new_shape.pop("transform_keyframes", None)
         new_shape['world_to_obj'] = np.eye(3, dtype=np.float32)
 
+        # compose_transformation returns object -> world.
+        # the shader receives the inverse because hit tests are done in object space
         if 'transform' in shape:
             obj_to_world = compose_transformation(shape['transform'])
             new_shape['world_to_obj'] = np.linalg.inv(obj_to_world)

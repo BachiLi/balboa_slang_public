@@ -29,6 +29,9 @@ def create_structured_buffer(device, dtype, values):
         dtype=dtype,
     )
 
+    # The cursor construct can be slow in practice.
+    # A production system may need to batch the update
+    # using numpy arrays.
     cursor = tensor.cursor()
     for i, value in enumerate(values):
         cursor[i].write(value)

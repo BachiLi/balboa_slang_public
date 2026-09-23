@@ -1,0 +1,11 @@
+[project]
+name = "balboa"
+version = "0.1.0"
+description = "UCSD CSE 167"
+readme = "README.md"
+requires-python = "==3.13.*"
+dependencies = [
+    "slangpy==0.42.0",
+    "numpy",
+    "pillow"
+]

@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.py[cod]
+
+output.png
+*.log
+
+outputs/
+
+*.fls
+*.aux
+*.fdb_latexmk
+
+latex.out/
+pdf/

@@ -38,14 +38,17 @@ if __name__ == "__main__":
     # HW 1.6
     p = subparsers.add_parser("1_6")
     p.add_argument('scene')
+    p.add_argument('-time', type=float, default=0)
     p.set_defaults(func=hw1.hw1_6)
     # HW 1.7
     p = subparsers.add_parser("1_7")
     p.add_argument('scene')
+    p.add_argument('-time', type=float, default=0)
     p.set_defaults(func=hw1.hw1_7)
     # HW 1.8
     p = subparsers.add_parser("1_8")
     p.add_argument('scene')
+    p.add_argument('-time', type=float, default=0)
     p.set_defaults(func=hw1.hw1_8)
 
     args = parser.parse_args()

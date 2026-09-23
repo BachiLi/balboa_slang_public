@@ -34,7 +34,7 @@ def hw1_2(args):
     polyline = buffer.structured_buffer_from_numpy(slang_device, points_np)
 
     vars = {'polyline': polyline,
-            'polyline_size': points_np.shape[0],
+            'num_polyline': points_np.shape[0],
             'is_closed': args.closed,
             'use_fill_color': args.fill_color is not None,
             'fill_color': args.fill_color if args.fill_color is not None else [0.0, 0.0, 0.0],

@@ -14,7 +14,7 @@ Computer graphics is the field that studies how to process \emph{visual data}, s
     \label{fig:render2d}
 \end{figure}
 
-In our first homework, we will implement a 2D renderer that takes ``shapes'' (e.g., circle, lines, squares, and triangles), and turn them into a raster image (\cref{fig:render2d}). A raster image is a particular kind of image that represent 2D contents using a grid of \emph{pixels}, where each pixel denotes the color at that location. Raster images are convienient because our displays (and our camera sensor) usually also represent images as a grid of pixels.
+In our first homework, we will implement a 2D renderer that takes ``shapes'' (e.g., circle, lines, squares, and triangles), and turn them into a raster image (\cref{fig:render2d}). A raster image is a particular kind of image that represent 2D contents using a grid of \emph{pixels}, where each pixel denotes the color at that location. Raster images are convenient because our displays (and our camera sensor) usually also represent images as a grid of pixels.
 
 Before you start coding, we recommend you to go through the whole handout to have some ideas of what needs to be done. Some of the instructions are \textbf{intentionally vague} because we want you to figure things out. Please come to our office hours or ask on Piazza if you have any questions.
 
@@ -22,7 +22,7 @@ Before you start coding, we recommend you to go through the whole handout to hav
 
 \paragraph{Grading.} We will compare your outputs to our reference solutions. You don't have to be accurate at binary level (as there will be floating point cancellation errors), we allow some error margins (the TAs will check manually if something seems off).
 
-\paragraph{Colloboration policy.} We allow a team up to two people. The homeworks are pretty dense and time-consuming (much harder than last year!), so we encourage you to team up. You can solo too if you want.
+\paragraph{Collaboration policy.} We allow a team up to two people. The homeworks are pretty dense and time-consuming (much harder than last year!), so we encourage you to team up. You can solo too if you want.
 
 \paragraph{In-person code interview.} After submitting the homework, each team will do
 a short individual interview during the Discussion section on Friday 3pm (right after the lecture). This will usually take around a minute (this is a big class so we need to be efficient). 
@@ -30,7 +30,6 @@ Both group members should attend, and either can answer the questions.
 We may ask you to explain a part of
 your implementation, predict what the code will do if we change something, or ask you
 to modify the code in a particular way. Some teams may get additional follow-up questions.
-
 
 The interview acts as a multiplier on your homework grade. Normally the multiplier
 is $1$. If you have substantial difficulty explaining your code, the multiplier may
@@ -45,7 +44,7 @@ We are not testing whether you memorized Slang/Python syntax. We want to make su
 you have an operational understanding of what your renderer is doing.
 
 \paragraph{Language models policy.} We do not encourage heavily using language models
-for your homeworks. Figuring out how to do things your self is an important part of learning
+for your homeworks. Figuring out how to do things yourself is an important part of learning
 process. Treat language models as TAs/tutors: you can ask them questions, but you should
 not let them code for you. Maybe try coming to us first? 
 
@@ -95,7 +94,7 @@ Once you have done with these, run
 \end{figure}
 
 In the first part of this homework, we will render a single circle on our image. We are given a gray ``canvas'', where in this part we assume it to be of size $640 \times 480$. We need a \textbf{coordinate system} to talk about points on this canvas -- \cref{fig:canvas} illustrates the coordinate system. We call this coordinate system the ``screen space''.
-We are futher given the center, radius, and color of the circle. These are command line arguments that we will parse for you.
+We are further given the center, radius, and color of the circle. These are command line arguments that we will parse for you.
 
 To render an image, we need to determine the color for each pixel. For this part, we focus on determining the color of the center of the pixel (\cref{fig:pixel}). To determine the pixel color, we decide whether the pixel center hits the circle or not. If it hits the circle, then we decide that the pixel's color is the circle's color. Otherwise, we decide that the pixel's color is the background color (by default, let's say it's $(0.5, 0.5, 0.5)$). How to decide whether the pixel center hits the circle? That's for you to figure out!
 
@@ -252,7 +251,7 @@ A polyline is a sequence of 2D points with straightlines connected through them.
 \end{figure}
 
 Similar to SVG, each polyline can have a \emph{fill color} (only applies to closed polylines) and a \emph{stroke color} (applies to both open and closed polylines) defined by an additional parameter stroke width. \cref{fig:fill_vs_stroke} illustrates them (pay extra attention to a few details including the round corners of the star in \cref{fig:fill_vs_stroke}(a), the middle regions in \cref{fig:fill_vs_stroke}(b), and the flat caps of the line segment in \cref{fig:fill_vs_stroke}(c): this will give you ideas about the ordering between strokes and filled color, the filling rule of even-odd vs non-zero, and the caps rule of flat vs round). 
-We should have covered how to determine whether a point belongs to fill vs stroke regions in the lectures, but it could be fun to figure it out own your own too!
+We should have covered how to determine whether a point belongs to fill vs stroke regions in the lectures, but it could be fun to figure it out on your own too!
 
 \begin{figure}[ht]
     \centering
@@ -367,7 +366,7 @@ struct QuadraticBezier {
     bool closed;
 };
 \end{lstlisting}
-Don't worry about the QuadraticBeizer for now. 
+Don't worry about the QuadraticBezier for now. 
 
 In \lstinline{hw1_3.slang}, you receive the scene directly in the function arguments:
 \begin{lstlisting}[language=Slang]
@@ -466,7 +465,7 @@ Next, we're going to edit our shapes using some 2D transformations. These transf
     \caption{\label{fig:transformation_affine} Using \emph{augmented matrices}, we can represent all affine transforms, including translation, using $3 \times 3$ matrices. We recommend you to hand compute these matrix vector products and confirm they are the same as \cref{fig:transformation}.}
 \end{figure}
 
-In this part, we will implement a few common affine transformations: scaling, shearing, rotation, and translation (in fact, all affine transformations can be written as combinations of these transformations, see ``polar decomposition'' if you are interested). Crucially, we also want to \emph{combine} these transformations: for example, we might want to first rotate the shape, then translate it. As noted in \cref{fig:transformation}, everything except for translation can be represented as a matric vector product. This is annoying for combining the transformations: for all other transformations, we can combine them by multiplying the transformation matrices: for example, if we want to first rotate using matrix $R$ then scale using matrix $S$, we can combine them into a single matrix $S R$ (think: why isn't it $R S$?). The existence of translation makes this difficult. Fortunately, there is a very clever trick to unify every affine transformation into matrix vector products: observe that
+In this part, we will implement a few common affine transformations: scaling, shearing, rotation, and translation (in fact, all affine transformations can be written as combinations of these transformations, see ``polar decomposition'' if you are interested). Crucially, we also want to \emph{combine} these transformations: for example, we might want to first rotate the shape, then translate it. As noted in \cref{fig:transformation}, everything except for translation can be represented as a matrix-vector product. This is annoying for combining the transformations: for all other transformations, we can combine them by multiplying the transformation matrices: for example, if we want to first rotate using matrix $R$ then scale using matrix $S$, we can combine them into a single matrix $S R$ (think: why isn't it $R S$?). The existence of translation makes this difficult. Fortunately, there is a very clever trick to unify every affine transformation into matrix vector products: observe that
 \begin{equation}
 \begin{bmatrix}
 x' \\ y' \\ 1
@@ -530,7 +529,7 @@ The affine transformation matrix allows us to easily chain these operations and 
     \label{fig:spaces}
 \end{figure}
 
-The transformation matrix above can be seen as a relation between \emph{spaces}. We call the space before the transformation the \emph{object space} because this is where the space the original object is described in. Here, the tranformation (let's call it $F$) converts points in the object space to the \emph{screen space}. On the other hand, the \emph{inverse} of the transformation $F^{-1}$ (i.e., matrix inversion) converts points in the screen space to the object space. See \cref{fig:spaces} for a visualization.
+The transformation matrix above can be seen as a relation between \emph{spaces}. We call the space before the transformation the \emph{object space} because this is where the space the original object is described in. Here, the transformation (let's call it $F$) converts points in the object space to the \emph{screen space}. On the other hand, the \emph{inverse} of the transformation $F^{-1}$ (i.e., matrix inversion) converts points in the screen space to the object space. See \cref{fig:spaces} for a visualization.
 
 The remaining question we need to address is: how do we test if the pixel center has hit the transformed shape? A main challenge is that the transformed shape may not be as easy to test compared to the original shape. For example, after linear transformations, a circle may become an ellipse. The trick we are going to test in the object space, instead of the screen space. Given a screen space point $x$ representing a pixel's center, we convert it to the object space using the inverse transform $F^{-1}$, then test whether it hits the object after the inverse transform. 
 
@@ -637,7 +636,7 @@ One thing you may notice after things start moving is some unpleasant flickering
 We will fix that in the next part.
 
 \section{Antialiasing (10 pts)}
-The flickering phenomonon we saw in the previous animations is called ``aliasing'' in signal processing literature (we will discuss this in depth in CSE 168). The solution to aliasing is called antialiasing. We are going to implement the simplest form of antialiasing called ``supersampling''. The idea is simple: instead of only testing/sampling the pixel center, we'll sample multiple points within a pixel, and take average between them. For this homework, we will do a $N \times N$ pattern, where $N$ is set by the parameter \lstinline{samples_per_axis} and by default it sets $N=4$. We subdivide a pixel into $N \times N$ subpixels, compute the color at the center of the subpixels, and take an average over them.
+The flickering phenomenon we saw in the previous animations is called ``aliasing'' in signal processing literature (we will discuss this in depth in CSE 168). The solution to aliasing is called antialiasing. We are going to implement the simplest form of antialiasing called ``supersampling''. The idea is simple: instead of only testing/sampling the pixel center, we'll sample multiple points within a pixel, and take average between them. For this homework, we will do a $N \times N$ pattern, where $N$ is set by the parameter \lstinline{samples_per_axis} and by default it sets $N=4$. We subdivide a pixel into $N \times N$ subpixels, compute the color at the center of the subpixels, and take an average over them.
 
 Go to \lstinline{hw1/hw1_6.slang} and implement the antialiasing scheme. Test your rendering using the following commands:
 \begin{lstlisting}[language=bash]
@@ -672,7 +671,7 @@ For objects with $0 < \alpha < 1$, we need to blend their colors. If there is on
 C = \alpha_0 C_0 + (1 - \alpha_0) B.
 \end{equation}
 
-What if we have two objects? We can see $\alpha$ as the amount of lights captured at that layer, and $1-\alpha$ as the amount of light pass through. So for two objects with alpha $\alpha_0$, $\alpha_1$ and color $C_0$ and $C_1$, and object $0$ is infront of object $1$, we can blend them as:
+What if we have two objects? We can see $\alpha$ as the amount of lights captured at that layer, and $1-\alpha$ as the amount of light pass through. So for two objects with alpha $\alpha_0$, $\alpha_1$ and color $C_0$ and $C_1$, and object $0$ is in front of object $1$, we can blend them as:
 \begin{equation}
 C = \alpha_0 C_0 + \alpha_1 (1 - \alpha_0) C_1 + (1 - \alpha_0) (1 - \alpha_1) B.
 \end{equation}
@@ -760,11 +759,11 @@ int solve_cubic(float a, float b, float c, float d,
 \end{lstlisting}
 Again, your main task is to derive the coefficients that should be passed to the solver. For every valid root $t$ inside $[0,1]$, evaluate the corresponding point on the curve and check its distance to the pixel.
 
-Our Bezier strokes have the same caps as the polyline strokes. All previous features should still apply to quadratic Bezier curves.
+Our Bezier strokes have the same caps as the polyline strokes, so the way of handling them should be similar. All previous features should still apply to quadratic Bezier curves.
 
 This probably sounds more scary than it actually is. Once you have the right polynomial coefficients, the rest of the code is quite similar to the polyline case.
 
-Go to \lstinline{hw1/hw1_8.slang} and implement the antialiasing scheme. Test your rendering using the following commands:
+Go to \lstinline{hw1/hw1_8.slang} and implement the quadratic Bezier curves. Test your rendering using the following commands:
 \begin{lstlisting}[language=bash]
   uv run python main.py 1_8 scenes/hw1/smily.json
   uv run python main.py 1_8 scenes/hw1/heart.json

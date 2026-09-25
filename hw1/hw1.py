@@ -4,7 +4,18 @@ import buffer
 import device
 import window
 import image
+import functools
 from . import hw1_scene
+
+def make_render_callback(kernel):
+    def render(command_encoder, vars, image):
+        kernel.dispatch(
+            thread_count=[image.width, image.height, 1],
+            command_encoder=command_encoder,
+            image=image,
+            **vars,
+        )
+    return render
 
 def hw1_1(args):
     slang_device = spy.create_device()
@@ -16,8 +27,8 @@ def hw1_1(args):
             'color': args.color}
 
     if args.output == None:
-        app = window.App(slang_device, compute_shader.kernel, img)
-        app.run(vars)
+        app = window.App(slang_device, img)
+        app.run(vars, make_render_callback(compute_shader.kernel))
     else:
         compute_shader.kernel.dispatch(
             thread_count=[img.width, img.height, 1],
@@ -43,8 +54,8 @@ def hw1_2(args):
             'stroke_width': args.stroke_width}
 
     if args.output == None:
-        app = window.App(slang_device, compute_shader.kernel, img)
-        app.run(vars)
+        app = window.App(slang_device, img)
+        app.run(vars, make_render_callback(compute_shader.kernel))
     else:
         compute_shader.kernel.dispatch(
             thread_count=[img.width, img.height, 1],
@@ -59,8 +70,8 @@ def hw1_3(args):
     img = buffer.create_texture_2d(slang_device, scene.resolution[0], scene.resolution[1])
     bindings = hw1_scene.upload_scene(scene, compute_shader.module, slang_device)
     if args.output == None:
-        app = window.App(slang_device, compute_shader.kernel, img)
-        app.run(bindings)
+        app = window.App(slang_device, img)
+        app.run(bindings, make_render_callback(compute_shader.kernel))
     else:
         compute_shader.kernel.dispatch(
             thread_count=[img.width, img.height, 1],
@@ -75,8 +86,8 @@ def hw1_4(args):
     img = buffer.create_texture_2d(slang_device, scene.resolution[0], scene.resolution[1])
     bindings = hw1_scene.upload_scene(scene, compute_shader.module, slang_device)
     if args.output == None:
-        app = window.App(slang_device, compute_shader.kernel, img)
-        app.run(bindings)
+        app = window.App(slang_device, img)
+        app.run(bindings, make_render_callback(compute_shader.kernel))
     else:
         compute_shader.kernel.dispatch(
             thread_count=[img.width, img.height, 1],
@@ -90,7 +101,7 @@ def hw1_5(args):
     scene = hw1_scene.parse_scene(args.scene)
     img = buffer.create_texture_2d(slang_device, scene.resolution[0], scene.resolution[1])
     if args.output == None:
-        app = window.App(slang_device, compute_shader.kernel, img)
+        app = window.App(slang_device, img)
         def update(t, bindings):
             # The following is slightly inefficient: 
             # we reupload the scene regardless of whether things have changed or not.
@@ -101,7 +112,7 @@ def hw1_5(args):
                                               t % scene.duration)
             return bindings
         bindings = hw1_scene.upload_scene(scene, compute_shader.module, slang_device, t=0.0)
-        app.run(bindings, update)
+        app.run(bindings, make_render_callback(compute_shader.kernel), update)
     else:
         t = args.time % scene.duration if hasattr(args, 'time') else 0.0
         bindings = hw1_scene.upload_scene(scene, compute_shader.module, slang_device, t=t)
@@ -117,7 +128,7 @@ def hw1_6(args):
     scene = hw1_scene.parse_scene(args.scene)
     img = buffer.create_texture_2d(slang_device, scene.resolution[0], scene.resolution[1])
     if args.output == None:
-        app = window.App(slang_device, compute_shader.kernel, img)
+        app = window.App(slang_device, img)
         def update(t, bindings):
             # The following is slightly inefficient: 
             # we reupload the scene regardless of whether things have changed or not.
@@ -128,7 +139,7 @@ def hw1_6(args):
                                               t % scene.duration)
             return bindings
         bindings = hw1_scene.upload_scene(scene, compute_shader.module, slang_device, t=0.0)
-        app.run(bindings, update)
+        app.run(bindings, make_render_callback(compute_shader.kernel), update)
     else:
         t = args.time % scene.duration if hasattr(args, 'time') else 0.0
         bindings = hw1_scene.upload_scene(scene, compute_shader.module, slang_device, t=t)
@@ -144,7 +155,7 @@ def hw1_7(args):
     scene = hw1_scene.parse_scene(args.scene)
     img = buffer.create_texture_2d(slang_device, scene.resolution[0], scene.resolution[1])
     if args.output == None:
-        app = window.App(slang_device, compute_shader.kernel, img)
+        app = window.App(slang_device, img)
         def update(t, bindings):
             # The following is slightly inefficient: 
             # we reupload the scene regardless of whether things have changed or not.
@@ -155,7 +166,7 @@ def hw1_7(args):
                                               t % scene.duration)
             return bindings
         bindings = hw1_scene.upload_scene(scene, compute_shader.module, slang_device, t=0.0)
-        app.run(bindings, update)
+        app.run(bindings, make_render_callback(compute_shader.kernel), update)
     else:
         t = args.time % scene.duration if hasattr(args, 'time') else 0.0
         bindings = hw1_scene.upload_scene(scene, compute_shader.module, slang_device, t=t)
@@ -171,7 +182,7 @@ def hw1_8(args):
     scene = hw1_scene.parse_scene(args.scene)
     img = buffer.create_texture_2d(slang_device, scene.resolution[0], scene.resolution[1])
     if args.output == None:
-        app = window.App(slang_device, compute_shader.kernel, img)
+        app = window.App(slang_device, img)
         def update(t, bindings):
             # The following is slightly inefficient: 
             # we reupload the scene regardless of whether things have changed or not.
@@ -182,7 +193,7 @@ def hw1_8(args):
                                               t % scene.duration)
             return bindings
         bindings = hw1_scene.upload_scene(scene, compute_shader.module, slang_device, t=0.0)
-        app.run(bindings, update)
+        app.run(bindings, make_render_callback(compute_shader.kernel), update)
     else:
         t = args.time % scene.duration if hasattr(args, 'time') else 0.0
         bindings = hw1_scene.upload_scene(scene, compute_shader.module, slang_device, t=t)

@@ -228,7 +228,49 @@ def compose_transformation(transforms):
 
 def interpolate_transformation(transform_keyframes, t):
     # TODO: your code here
+    if t <= transform_keyframes[0]["time"]:
+        return transform_keyframes[0]["transform"]
 
+    if t >= transform_keyframes[-1]["time"]:
+        return transform_keyframes[-1]["transform"]
+    
+    for i in range(len(transform_keyframes) - 1):
+        t0 = transform_keyframes[i]["time"]
+        t1 = transform_keyframes[i + 1]["time"]
+
+        if t >= t0 and t <= t1:
+            w = (t - t0)/(t1 - t0)
+
+            keyframe0 = transform_keyframes[i]["transform"]
+            keyframe1 = transform_keyframes[i + 1]["transform"]
+
+            interpolated_transforms = []
+
+            for j in range(len(keyframe0)):
+                transform0 = keyframe0[j]
+                transform1 = keyframe1[j]
+
+                transform_type = next(iter(transform0))
+
+                values0 = transform0[transform_type]
+                values1 = transform1[transform_type]
+
+                interpolated_values = []
+
+                for k in range(len(values0)):
+                    # print("Transformation type:", transform_type)
+                    # print("values0:", values0)
+                    # print("values1:", values1)
+                    # print("j:", j)
+                    # print("len(values0):", len(values0), flush=True)
+                    value = (1 - w) * values0[k] + w * values1[k]
+                    interpolated_values.append(value)
+
+                interpolated = {transform_type: interpolated_values}
+
+                interpolated_transforms.append(interpolated)
+
+            return interpolated_transforms
     # Should never happen?
     assert False
 

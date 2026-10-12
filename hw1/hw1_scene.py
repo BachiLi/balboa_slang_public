@@ -227,7 +227,6 @@ def compose_transformation(transforms):
     return F
 
 def interpolate_transformation(transform_keyframes, t):
-    # TODO: your code here
     if t <= transform_keyframes[0]["time"]:
         return transform_keyframes[0]["transform"]
 
@@ -271,6 +270,7 @@ def interpolate_transformation(transform_keyframes, t):
                 interpolated_transforms.append(interpolated)
 
             return interpolated_transforms
+        
     # Should never happen?
     assert False
 

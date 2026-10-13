@@ -139,12 +139,6 @@ void compute_main(uint2 tid : SV_DispatchThreadID,
                             }
                         }
                     }
-
-                    // Apply even-odd rule for fill
-                    if (shape.use_fill && currentPolyline.closed && intersections % 2 == 1)
-                    {
-                        is_inside_fill = true;
-                    }
                 }
 
                 // Stroke alpha blending

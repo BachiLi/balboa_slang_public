@@ -1,6 +1,6 @@
 import hw1_common;
 
-bool print_polyline(uint2 tid: SV_DispatchThreadID,
+bool2 print_polyline(uint2 tid: SV_DispatchThreadID,
                     uniform float2 pos,
                     StructuredBuffer<float2> polyline,
                     uniform int pts_offset,
@@ -13,12 +13,14 @@ bool print_polyline(uint2 tid: SV_DispatchThreadID,
                     uniform bool use_stroke_color,
                     uniform float3 stroke_color,
                     uniform float stroke_width,
-                    RWTexture2D<float4> image,
-                    float3* rgb_sum) {
+                    RWTexture2D<float4> image) {
 
     float x = pos.x;
     float y = pos.y;
-    bool is_stroke_painted = false;
+
+    bool is_inside_fill = false;
+    bool is_inside_stroke = false;
+
     int is_closed_int = is_closed ? 0 : 1;
 
     // For loop for Fill Color
@@ -54,18 +56,10 @@ bool print_polyline(uint2 tid: SV_DispatchThreadID,
             qminq2 = length(q - q2);
 
             if (L > 0 && L < p1minp0 && qminq2 < stroke_width / 2) {
-                rgb_sum->r += stroke_color.r;
-                rgb_sum->g += stroke_color.g;
-                rgb_sum->b += stroke_color.b;
-                is_stroke_painted = true;
-                return true;
+                is_inside_stroke = true;
             }
             else if (distance < radius && last_line_is_open) {
-                rgb_sum->r += stroke_color.r;
-                rgb_sum->g += stroke_color.g;
-                rgb_sum->b += stroke_color.b;
-                is_stroke_painted = true;
-                return true;
+                is_inside_stroke = true;
             }
         }
         // Fill color code
@@ -103,15 +97,12 @@ bool print_polyline(uint2 tid: SV_DispatchThreadID,
     }
 
     // Paints the pixel the fill color if correct
-    if (count != 0 && !is_stroke_painted)
+    if (count != 0 && !is_inside_stroke)
     {
-        rgb_sum->r += fill_color.r;
-        rgb_sum->g += fill_color.g;
-        rgb_sum->b += fill_color.b;
-        return true;
+        is_inside_fill = true;
     }
 
-    return false;
+    return bool2(is_inside_fill, is_inside_stroke);
 }
 
 /*
@@ -137,7 +128,7 @@ float get_derivative(float t, float p0, float p1, float p2) {
     return result.d;
 }
 
-bool print_bezier(uint2 tid: SV_DispatchThreadID,
+bool2 print_bezier(uint2 tid: SV_DispatchThreadID,
                   uniform float2 pos,
                   StructuredBuffer<float2> polyline,
                   uniform int pts_offset,
@@ -150,14 +141,15 @@ bool print_bezier(uint2 tid: SV_DispatchThreadID,
                   uniform bool use_stroke_color,
                   uniform float3 stroke_color,
                   uniform float stroke_width,
-                  RWTexture2D<float4> image,
-                  float3 *rgb_sum) {
+                  RWTexture2D<float4> image) {
 
     float x = pos.x;
     float y = pos.y;
 
-    bool is_stroke_painted = false;
     int is_closed_int = is_closed ? 0 : 2;
+
+    bool is_inside_stroke = false;
+    bool is_inside_fill = false;
 
     // count for ray-curve intersection
     int count = 0;
@@ -211,7 +203,6 @@ bool print_bezier(uint2 tid: SV_DispatchThreadID,
             float d = (dot(B, C)) - (dot(B, q));
 
             int num_roots = solve_cubic(a, b, c, d, t);
-
             
 
             if (num_roots > 0) {
@@ -221,22 +212,10 @@ bool print_bezier(uint2 tid: SV_DispatchThreadID,
                     if (t[j] >= 0 && t[j] <= 1) {
                         float dist = pow(length(my_quad_function_2d(t[j], p0, p1, p2) - q), 2);
                         float radius = pow(stroke_width / 2, 2);
-                        //bool last_line_is_open = !is_closed && i == num_polyline - 2 ? false : true;
 
                         if (dist <= pow(stroke_width / 2, 2)) {
-                            rgb_sum->r += stroke_color.r;
-                            rgb_sum->g += stroke_color.g;
-                            rgb_sum->b += stroke_color.b;
-                            is_stroke_painted = true;
-                            return true;
+                            is_inside_stroke = true;
                         }
-                        // else if (dist < radius && last_line_is_open) {
-                        //     rgb_sum->r += stroke_color.r;
-                        //     rgb_sum->g += stroke_color.g;
-                        //     rgb_sum->b += stroke_color.b;
-                        //     is_stroke_painted = true;
-                        //     return true;
-                        // }
                     }
                 }
             }
@@ -280,15 +259,12 @@ bool print_bezier(uint2 tid: SV_DispatchThreadID,
     }
 
     // Paints the pixel the fill color if correct
-    if (count != 0 && !is_stroke_painted)
+    if (count != 0 && !is_inside_stroke)
     {
-        rgb_sum->r += fill_color.r;
-        rgb_sum->g += fill_color.g;
-        rgb_sum->b += fill_color.b;
-        return true;
+        is_inside_fill = true;
     }
 
-    return false;
+    return bool2(is_inside_fill, is_inside_stroke);
 }
 
 [shader("compute")]
@@ -318,127 +294,131 @@ void compute_main(uint2 tid : SV_DispatchThreadID,
     // The for loops a and b go through the sub pixels of pid
     for (int a = 0; a < samples_per_axis; a++) {
         for (int b = 0; b < samples_per_axis; b++) {
+
             // X and Y here are computed as the center of a subpixel
             float x = float(tid.x) + (b + 0.5) / samples_per_axis;
             float y = float(height - 1 - tid.y) + (a + 0.5) / samples_per_axis;
             float3 point_vec = float3(x, y, 1);
 
-            // Iterate through the shapes to paint them on the screen
-            int circle_i = 0;
-            int polyline_i = 0;
-            int bezier_i = 0;
+            float3 color = float3(0.0);
+            float remaining = 1.0;
 
-            bool did_paint = false;
             for (int i = 0; i < num_shapes; i++)
             {
                 Shape currentShape = shapes[i];
+                float4 stroke_rgba = currentShape.stroke_rgba;
+                float4 fill_rgba = currentShape.fill_rgba;
+
                 float3 new_vec = mul(currentShape.world_to_obj, point_vec);
                 x = new_vec.x;
                 y = new_vec.y;
 
-                float4 stroke_rgba = currentShape.stroke_rgba;
-                float4 fill_rgba = currentShape.fill_rgba;
+                bool2 is_inside = bool2(false, false);
+                bool is_inside_stroke = false;
+                bool is_inside_fill = false;
 
-                bool is_stroke_painted = false;
-
+                
                 if (currentShape.type == ShapeType::Circle)
                 {
-                    Circle currentCircle = circles[circle_i];
+                    Circle currentCircle = circles[currentShape.index];
                     float distance = sqrt(pow(currentCircle.center.x - x, 2) + pow(currentCircle.center.y - y, 2));
 
                     // Stroke
+                    
                     if (currentShape.use_stroke)
                     {
+                        
                         if (distance < currentCircle.radius + currentShape.stroke_width / 2 && distance > currentCircle.radius - currentShape.stroke_width / 2)
                         {
-                            rgb_sum.r += stroke_rgba.r;
-                            rgb_sum.g += stroke_rgba.g;
-                            rgb_sum.b += stroke_rgba.b;
-                            did_paint = true;
-                            break;
+                            is_inside_stroke = true;                            
                         }
                     }
 
                     // Fill
-                    if (currentShape.use_fill)
+                    if (currentShape.use_fill && !is_inside_stroke)
                     {
                         if (distance < currentCircle.radius)
                         {
-                            rgb_sum.r += fill_rgba.r;
-                            rgb_sum.g += fill_rgba.g;
-                            rgb_sum.b += fill_rgba.b;
-                            did_paint = true;
-                            break;
+                            is_inside_fill = true;
                         }
                     }
-
-                    circle_i++;
                 }
                 else if (currentShape.type == ShapeType::Polyline)
                 {
-                    Polyline currentPolyline = polylines[polyline_i];
+                    Polyline currentPolyline = polylines[currentShape.index];
                     int pts_begin = currentPolyline.pts_begin;
                     int pts_end = currentPolyline.pts_end;
 
-                    bool did_paint_polyline = print_polyline(tid,
-                                                    float2(x, y),
-                                                    points,
-                                                    pts_begin,
-                                                    height,
-                                                    width,
-                                                    pts_end - pts_begin,
-                                                    currentPolyline.closed,
-                                                    currentShape.use_fill,
-                                                    currentShape.fill_rgba.rgb,
-                                                    currentShape.use_stroke,
-                                                    currentShape.stroke_rgba.rgb,
-                                                    currentShape.stroke_width,
-                                                    image,
-                                                    &rgb_sum);
 
-                    if (did_paint_polyline) {
-                        did_paint = true;
-                        break;
-                    }
-                        
-                    polyline_i++;
+                    is_inside = print_polyline(tid,
+                                                float2(x, y),
+                                                points,
+                                                pts_begin,
+                                                height,
+                                                width,
+                                                pts_end - pts_begin,
+                                                currentPolyline.closed,
+                                                currentShape.use_fill,
+                                                currentShape.fill_rgba.rgb,
+                                                currentShape.use_stroke,
+                                                currentShape.stroke_rgba.rgb,
+                                                currentShape.stroke_width,
+                                                image);
+
+                    is_inside_fill = is_inside.x;
+                    is_inside_stroke = is_inside.y;
                 }
                 else if (currentShape.type == ShapeType::QuadraticBezier) {
 
-                    QuadraticBezier currentBezier = quadratic_beziers[bezier_i];
+                    QuadraticBezier currentBezier = quadratic_beziers[currentShape.index];
                     int pts_begin = currentBezier.pts_begin;
                     int pts_end = currentBezier.pts_end;
 
-                    bool did_paint_bezier = print_bezier(tid,
-                                                           float2(x, y),
-                                                           points,
-                                                           pts_begin,
-                                                           height,
-                                                           width,
-                                                           pts_end - pts_begin,
-                                                           currentBezier.closed,
-                                                           currentShape.use_fill,
-                                                           currentShape.fill_rgba.rgb,
-                                                           currentShape.use_stroke,
-                                                           currentShape.stroke_rgba.rgb,
-                                                           currentShape.stroke_width,
-                                                           image,
-                                                           &rgb_sum);
+                    is_inside = print_bezier(tid,
+                                            float2(x, y),
+                                            points,
+                                            pts_begin,
+                                            height,
+                                            width,
+                                            pts_end - pts_begin,
+                                            currentBezier.closed,
+                                            currentShape.use_fill,
+                                            currentShape.fill_rgba.rgb,
+                                            currentShape.use_stroke,
+                                            currentShape.stroke_rgba.rgb,
+                                            currentShape.stroke_width,
+                                            image);
 
-                    if (did_paint_bezier) {
-                        did_paint = true;
-                        break;
-                    }
+                    is_inside_fill = is_inside.x;
+                    is_inside_stroke = is_inside.y;
+                }
+                
 
-                    bezier_i++;
+                // Stroke alpha blending
+                if (is_inside_stroke)
+                {
+                    color += remaining * stroke_rgba.a * stroke_rgba.rgb;
+                    remaining *= 1.0 - stroke_rgba.a;
+                }
+
+                // Fill alpha blending
+                if (is_inside_fill)
+                {
+                    color += remaining * fill_rgba.a * fill_rgba.rgb;
+                    remaining *= 1.0 - fill_rgba.a;
+                }
+
+                if (remaining <= 0.0)
+                {
+                    break;
                 }
             }
 
-            if (!did_paint) {
-                rgb_sum.r += background.r;
-                rgb_sum.g += background.g;
-                rgb_sum.b += background.b;
-            }
+            // Blend background
+            color += remaining * background.rgb;
+
+            // Accumulate subpixel color
+            rgb_sum += color;
         }
     }
 

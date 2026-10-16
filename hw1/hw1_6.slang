@@ -132,7 +132,7 @@ void compute_main(uint2 tid : SV_DispatchThreadID,
         return;
     }
 
-    //samples_per_axis = 1;
+    // samples_per_axis = 1;
 
     image[tid] = float4(background, 1.0);
 

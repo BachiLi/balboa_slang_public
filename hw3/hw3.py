@@ -35,7 +35,7 @@ def hw3_1(args):
         'num_spheres': len(spheres)
     }
 
-    def render(command_encoder, vars, img):
+    def render(command_encoder, bindings, img):
         compute_shader.kernel.dispatch(
             thread_count=[args.width, args.height, 1],
             command_encoder=command_encoder,
@@ -45,10 +45,10 @@ def hw3_1(args):
 
     if args.output == None:
         app = window.App(slang_device, img)
-        app.run(vars, render)
+        app.run(bindings, render)
     else:
         command_encoder = slang_device.create_command_encoder()
-        render(command_encoder, vars, img)
+        render(command_encoder, bindings, img)
         submit_id = slang_device.submit_command_buffer(
             command_encoder.finish()
         )

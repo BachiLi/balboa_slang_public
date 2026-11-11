@@ -1,5 +1,8 @@
+# For 4.5
+# uv run python main.py 4_5 scenes/hw4/cloth_tunnel.py
+
 import numpy as np
-from scenes.hw4.geometry import make_cloth_grid
+from scenes.hw4.geometry import make_cloth_grid, make_cloth_constraints
 
 def make_scene():
     # Five alternating spheres
@@ -13,32 +16,13 @@ def make_scene():
     ], dtype=np.float32)
 
     # Cloth above the first sphere
-    nx, ny = 31, 25
-    sx, sy = 1.0, 0.80
-    positions, triangles, dx, dy = make_cloth_grid(
-        nx, ny, sx, sy, orientation='horizontal')
+    nx, ny = 30, 25
+    sx, sy = 1.0, 0.8
+    positions, triangles, dx, dy = make_cloth_grid(nx, ny, sx, sy)
     # Center cloth around z=0
-    positions[:, 2] += sy / 2
     positions[:, 0] -= 0.20
     positions[:, 1] = 9.20
-
-    # Structural, shear, and bending springs
-    edges = []
-    rest_lengths = []
-    for y in range(ny):
-        for x in range(nx):
-            i = y * nx + x
-            for ox, oy in [
-                (1, 0), (0, 1),
-                (1, 1), (-1, 1),
-                (2, 0), (0, 2)
-            ]:
-                xx, yy = x + ox, y + oy
-                if 0 <= xx < nx and 0 <= yy < ny:
-                    edges.append((i, yy * nx + xx))
-                    rest_lengths.append(
-                        np.hypot(ox * dx, oy * dy))
-
+    edges, rest_lengths = make_cloth_constraints(nx, ny, dx, dy)
     velocities = np.zeros_like(positions)
 
     return {
